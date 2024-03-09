@@ -2,7 +2,7 @@
 
 A simple demonstration of the Playfair Cipher encryption technique.
 
-## Wiki
+## Wikipedia
 https://en.wikipedia.org/wiki/Playfair_cipher
 
 ## Contributing
