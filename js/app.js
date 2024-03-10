@@ -46,8 +46,6 @@ function createAlphaKeyMatMap(keyword) {
     let alphabet = new Array();
     
     for(i = 0; i < 26; i++) {
-	if(String.fromCharCode(i + 65) == excluded)
-	    continue;
         alphabet.push(String.fromCharCode(i + 65));
     }
     
@@ -83,6 +81,8 @@ function createAlphaKeyMatMap(keyword) {
             idx += 1
         }
     }
+
+    mapping[excluded] = mapping["I"]
 
     return [alphabet, key, mat, mapping];
 
