@@ -46,6 +46,8 @@ function createAlphaKeyMatMap(keyword) {
     let alphabet = new Array();
     
     for(i = 0; i < 26; i++) {
+	if(String.fromCharCode(i + 65) == excluded)
+	    continue;
         alphabet.push(String.fromCharCode(i + 65));
     }
     
@@ -86,24 +88,22 @@ function createAlphaKeyMatMap(keyword) {
 
 }
 
-function encrypt(message, keyword) {
-    
+function encrypt(msg, keyword) {
     alphakeymatmap = createAlphaKeyMatMap(keyword);
     alphabet = alphakeymatmap[0];
     key = alphakeymatmap[1];
     mat = alphakeymatmap[2];
     mapping = alphakeymatmap[3];
 
-    message = message.toUpperCase();
+    msg = msg.toUpperCase();
+    message = "";
+    for(i = 0; i < msg.length; i++)
+	if(alphabet.includes(msg[i]))
+	    message += msg[i];
     encrypted = "";
     
     i = 0;
     while (i < message.length) {
-	if (!alphabet.includes(message[i])) {
-	    i+=1;
-	    continue;
-	}
-
         if (i+1 < message.length) {
             a = message[i];
             b = message[i+1];
@@ -127,14 +127,15 @@ function encrypt(message, keyword) {
     
         // if in same row, take the adjacent letters to the right in that row (%5 for wrapping around the row)
         if (row1 == row2) {
-          encrypted += mat[(row1 + 1)%5][col1]
-          encrypted += mat[(row2 + 1)%5][col2]
+	    encrypted += mat[row1][(col1 + 1)%5]
+            encrypted += mat[row2][(col2 + 1)%5]
 	}
     
         // if in same row, take the adjacent letters below in that row (%5 for wrapping around the row)
         else if (col1 == col2) {
-          encrypted += mat[row1][(col1 + 1)%5]
-          encrypted += mat[row2][(col2 + 1)%5]
+	    encrypted += mat[(row1 + 1)%5][col1]
+            encrypted += mat[(row2 + 1)%5][col2]
+          
 	}
     
        // else take the letter in the same row of one letter and the column of the other letter in the digram
@@ -162,20 +163,21 @@ function decrypt(encrypted, keyword) {
     for(i = 0; i < encrypted.length; i+=2) {
         a = encrypted[i];
         b = encrypted[i+1];
-	    digram = a + b;
+	digram = a + b;
+
         row1 = mapping[digram[0]][0]
     	col1 = mapping[digram[0]][1]
         row2 = mapping[digram[1]][0]
     	col2 = mapping[digram[1]][1]
 
         if (row1 == row2) {
-          decrypted += mat[(row1 - 1)%5][col1]
-          decrypted += mat[(row2 - 1)%5][col2]
+	    decrypted += mat[row1][(col1-1 < 0? 5 + col1 - 1: col1 - 1)%5]
+      	    decrypted += mat[row2][(col2-1 < 0? 5 + col2 - 1: col2 - 1)%5]
 	}
     
         else if (col1 == col2) {
-          decrypted += mat[row1][(col1 - 1)%5]
-          decrypted += mat[row2][(col2 - 1)%5]
+	    decrypted += mat[(row1-1 < 0? 5 + row1 - 1: row1 - 1)%5][col1]
+      	    decrypted += mat[(row2-1 < 0? 5 + row2 - 1: row2 - 1)%5][col2]
 	}
     
         else {
