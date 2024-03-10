@@ -11,55 +11,36 @@ input.addEventListener("input", updateOutput);
 encryptKey.addEventListener("input", updateOutput);
 decryptKey.addEventListener("input", updateOutput);
 
-function setMatrixEn(matrix, key) {
+function getMatrixText(matrix, key) {
     matrixtext = "";
     for(i = 0; i < 5; i++) {
 	matrixtext += "[ ";
         for(j = 0; j < 5; j++) {
 	    if(5*i + j < key.length) {
-		matrixtext += "<span class=\"keyletters\">" + mat[i][j] + "</span> ";
+		matrixtext += "<span class=\"keyletters\">" + matrix[i][j] + "</span> ";
 	    }
 	    else {
-		matrixtext += mat[i][j] + " ";
+		matrixtext += matrix[i][j] + " ";
 	    }
 	}
 	matrixtext += "]<br>";
     }
 
-    matrixEn.innerHTML = matrixtext;
-}
-
-function setMatrixDe(matrix, key) {
-    matrixtext = "";
-    for(i = 0; i < 5; i++) {
-	matrixtext += "[ ";
-        for(j = 0; j < 5; j++) {
-	    if(5*i + j < key.length) {
-		matrixtext += "<span class=\"keyletters\">" + mat[i][j] + "</span> ";
-	    }
-	    else {
-		matrixtext += mat[i][j] + " ";
-	    }
-	}
-	matrixtext += "]<br>";
-    }
-
-    matrixDe.innerHTML = matrixtext;
+    return matrixtext;
 }
 
 function updateOutput() {
     encryptKey.value = encryptKey.value.toUpperCase();
     decryptKey.value = decryptKey.value.toUpperCase();
     input.value = input.value.toUpperCase();
-    let inputValue = input.value;
-    let encryptKeyValue = encryptKey.value;
-    let decryptKeyValue = decryptKey.value;
 
-    encrypt(inputValue, encryptKeyValue);
+    encrypted = encrypt(input.value, encryptKey.value);
+    decrypted = decrypt(encrypted, decryptKey.value);
+    updateData(decrypted, encrypted);
 }
 
-function encrypt(message, keyword) {
-    
+function createAlphaKeyMatMap(keyword) {
+
     keyword = keyword.toUpperCase();
     let excluded = "J";
     let alphabet = new Array();
@@ -71,7 +52,7 @@ function encrypt(message, keyword) {
     key = "";
     
     for(i = 0; i < keyword.length; i++) {
-        if(!key.includes(keyword[i]) && keyword[i] != excluded) {
+        if(!key.includes(keyword[i]) && keyword[i] != excluded && alphabet.includes(keyword[i])) {
             key += keyword[i];
         }
     }
@@ -100,12 +81,29 @@ function encrypt(message, keyword) {
             idx += 1
         }
     }
+
+    return [alphabet, key, mat, mapping];
+
+}
+
+function encrypt(message, keyword) {
     
+    alphakeymatmap = createAlphaKeyMatMap(keyword);
+    alphabet = alphakeymatmap[0];
+    key = alphakeymatmap[1];
+    mat = alphakeymatmap[2];
+    mapping = alphakeymatmap[3];
+
     message = message.toUpperCase();
     encrypted = "";
     
     i = 0;
     while (i < message.length) {
+	if (!alphabet.includes(message[i])) {
+	    i+=1;
+	    continue;
+	}
+
         if (i+1 < message.length) {
             a = message[i];
             b = message[i+1];
@@ -146,53 +144,18 @@ function encrypt(message, keyword) {
 	}
     }
     
-    setMatrixEn(mat, key);
+    matrixEn.innerHTML = getMatrixText(mat, key);
+
+    return encrypted;
     
-    decrypt(encrypted, decryptKey.value);
 }
 
 function decrypt(encrypted, keyword) {
-    encrypted = encrypted.toUpperCase();
-    keyword = keyword.toUpperCase();
-    let excluded = "J";
-    let alphabet = new Array();
-    
-    for(i = 0; i < 26; i++) {
-        alphabet.push(String.fromCharCode(i + 65));
-    }
-    
-    key = "";
-    
-    for(i = 0; i < keyword.length; i++) {
-        if(!key.includes(keyword[i]) && keyword[i] != excluded) {
-            key += keyword[i];
-        }
-    }
-    
-    mat = new Array()
-
-    for(i = 0; i < 5; i++) {
-    	mat.push(new Array());
-        for(j = 0; j < 5; j++) {
-        	mat[i].push("")
-        }
-    }
-    
-    mapping = {}
-    
-    for(i = 0; i < key.length; i++) {
-        mat[Math.floor(i/5)][i%5] = key[i];
-        mapping[key[i]] = [Math.floor(i/5), i%5]
-    }
-    
-    idx = key.length;
-    for(i = 0; i < alphabet.length; i++) {
-        if(!key.includes(alphabet[i]) && alphabet[i] != excluded) {
-            mat[Math.floor(idx/5)][idx%5] = alphabet[i];
-            mapping[alphabet[i]] = [Math.floor(idx/5), idx%5]
-            idx += 1
-        }
-    }
+    alphakeymatmap = createAlphaKeyMatMap(keyword);
+    alphabet = alphakeymatmap[0];
+    key = alphakeymatmap[1];
+    mat = alphakeymatmap[2];
+    mapping = alphakeymatmap[3];
     
     decrypted = "";
 
@@ -220,9 +183,10 @@ function decrypt(encrypted, keyword) {
           decrypted += mat[row2][col1]
 	}
     }
-    setMatrixDe(mat, key);
+
+    matrixDe.innerHTML = getMatrixText(mat, key);
     
-    updateData(decrypted, encrypted);
+    return decrypted;
 }
 
 function updateData(decryptedMsgText, encryptedMsgText) {
